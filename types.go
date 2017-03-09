@@ -21,11 +21,18 @@ type User struct {
 }
 
 type Chat struct {
-	Id                          int    `json:id`
-	Type                        string `json:chat_type`
+	Id                          int    `json:"id"`
+	Type                        string `json:"chat_type"`
 	Title                       string `json:title`
 	Username                    string `json:username`
 	FirstName                   string `json:first_name`
 	LastName                    string `json:last_name`
 	AllMembersAreAdministrators bool   `json:all_members_are_administrators`
+}
+
+type ReplyMessage struct {
+	ChatId      int         `json:"chat_id"`
+	Text        string      `json:"text"`
+	ParseMode   string      `json:"parse_mode,omitempty"`
+	ReplyMarkup interface{} `json:"reply_markup,omitempty"`
 }
