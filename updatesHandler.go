@@ -8,13 +8,15 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
+	"strconv"
 )
 
-var updatesHandler func(Update) ReplyMessage
+var updatesHandler func(Update) interface{}
 var apiToken string
 
-func StartListen(botId string, port int, handler func(Update) ReplyMessage) error {
+func StartListen(botId string, port int, handler func(Update) interface{}) error {
 	updatesHandler = handler
 	apiToken = botId
 	http.HandleFunc("/", handleHttp)
@@ -27,12 +29,20 @@ func handleHttp(w http.ResponseWriter, r *http.Request) {
 	var upd Update
 	json.Unmarshal(bytes, &upd)
 
-	message := updatesHandler(upd)
+	var response interface{} = updatesHandler(upd)
 
-	sendMessage(upd.Message.Chat.Id, message)
-
-	io.WriteString(w, "ok")
-
+	message, ok := response.(ReplyMessage)
+	if ok {
+		sendMessage(upd.Message.Chat.Id, message)
+		io.WriteString(w, "ok")
+		return
+	}
+	document, ok := response.(ReplyDocument)
+	if ok {
+		sendDocument(upd.Message.Chat.Id, document)
+		io.WriteString(w, "ok")
+		return
+	}
 }
 
 func sendMessage(chatId int, msg ReplyMessage) {
@@ -52,4 +62,25 @@ func sendMessage(chatId int, msg ReplyMessage) {
 	}
 
 	log.Printf("%v from telegram api\n", resp.StatusCode)
+}
+
+func sendDocument(chatId int, document ReplyDocument) {
+	client := http.Client{
+		Transport: web.DefaultTransport(1000),
+	}
+
+	sendMsgUrl := fmt.Sprintf("https://api.telegram.org/bot%v/sendDocument", apiToken)
+
+	var buf bytes.Buffer
+	mpWriter := multipart.NewWriter(&buf)
+	fw, _ := mpWriter.CreateFormFile("document", document.InputFile.FileName)
+	fw.Write(document.InputFile.Content)
+	mpWriter.WriteField("chat_id", strconv.Itoa(chatId))
+	mpWriter.WriteField("caption", document.Caption)
+	mpWriter.Close()
+
+	//response, _ :=
+	client.Post(sendMsgUrl, mpWriter.FormDataContentType(), &buf)
+	//rb, _ := ioutil.ReadAll(response.Body)
+	//fmt.Printf("%v\n%v\n", response, string(rb))
 }

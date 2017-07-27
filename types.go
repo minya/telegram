@@ -37,6 +37,17 @@ type ReplyMessage struct {
 	ReplyMarkup interface{} `json:"reply_markup,omitempty"`
 }
 
+type ReplyDocument struct {
+	ChatId    int    `json:"chat_id"`
+	Caption   string `json:"parse_mode,omitempty"`
+	InputFile InputFile
+}
+
+type InputFile struct {
+	Content  []byte
+	FileName string
+}
+
 type InlineKeyboardMarkup struct {
 	Keyboard        [][]KeyboardButton `json:"keyboard"`
 	ResizeKeyboard  bool               `json:"resize_keyboard"`
