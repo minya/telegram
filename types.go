@@ -38,9 +38,10 @@ type ReplyMessage struct {
 }
 
 type ReplyDocument struct {
-	ChatId    int    `json:"chat_id"`
-	Caption   string `json:"parse_mode,omitempty"`
-	InputFile InputFile
+	ChatId      int    `json:"chat_id"`
+	Caption     string `json:"parse_mode,omitempty"`
+	InputFile   InputFile
+	ReplyMarkup interface{} `json:"reply_markup,omitempty"`
 }
 
 type InputFile struct {
