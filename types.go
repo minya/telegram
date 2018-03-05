@@ -49,15 +49,25 @@ type InputFile struct {
 	FileName string
 }
 
-type InlineKeyboardMarkup struct {
+type ReplyKeyboardMarkup struct {
 	Keyboard        [][]KeyboardButton `json:"keyboard"`
 	ResizeKeyboard  bool               `json:"resize_keyboard"`
 	OneTimeKeyboard bool               `json:"one_time_keyboard"`
 	Selective       bool               `json:"selective"`
 }
 
+type InlineKeyboardMarkup struct {
+	InlineKeyboard [][]InlineKeyboardButton `json:"inline_keyboard"`
+}
+
 type KeyboardButton struct {
 	Text            string `json:"text"`
 	RequestContact  bool   `json:"request_contact"`
 	RequestLocation bool   `json:"request_location"`
+}
+
+type InlineKeyboardButton struct {
+	Text         string `json:"text"`
+	Url          string `json:"url",omitempty`
+	CallbackData bool   `json:"callback_data",omitempty`
 }
