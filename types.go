@@ -1,8 +1,9 @@
 package telegram
 
 type Update struct {
-	UpdateId int     `json:"update_id"`
-	Message  Message `json:"message"`
+	UpdateId      int           `json:"update_id"`
+	Message       Message       `json:"message,omitempty"`
+	CallbackQuery CallbackQuery `json:"callback_query,omitempty"`
 }
 
 type Message struct {
@@ -49,6 +50,14 @@ type InputFile struct {
 	FileName string
 }
 
+type CallbackQuery struct {
+	Id           string  `json:"id"`
+	From         User    `json:"from"`
+	Data         string  `json:"data"`
+	Message      Message `json:"message,omitempty"`
+	ChatInstance string  `json:"chat_instance,omitempty"`
+}
+
 type ReplyKeyboardMarkup struct {
 	Keyboard        [][]KeyboardButton `json:"keyboard"`
 	ResizeKeyboard  bool               `json:"resize_keyboard"`
@@ -69,5 +78,5 @@ type KeyboardButton struct {
 type InlineKeyboardButton struct {
 	Text         string `json:"text"`
 	Url          string `json:"url",omitempty`
-	CallbackData bool   `json:"callback_data",omitempty`
+	CallbackData string `json:"callback_data",omitempty`
 }
