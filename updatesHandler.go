@@ -81,8 +81,8 @@ func sendDocument(document ReplyDocument) {
 	mpWriter.WriteField("caption", document.Caption)
 	mpWriter.Close()
 
-	//response, _ :=
-	response, _ := client.Post(sendMsgURL, mpWriter.FormDataContentType(), &buf)
-	rb, _ := ioutil.ReadAll(response.Body)
-	fmt.Printf("%v\n%v\n", response, string(rb))
+	resp, _ := client.Post(sendMsgURL, mpWriter.FormDataContentType(), &buf)
+	// rb, _ := ioutil.ReadAll(response.Body)
+	log.Printf("%v from telegram api\n", resp.StatusCode)
+	// log.Printf("%v\n%v\n", response, string(rb))
 }
