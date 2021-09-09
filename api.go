@@ -26,28 +26,74 @@ func NewApi(botToken string) Api {
 }
 
 func (api *Api) SendMessage(msg ReplyMessage) error {
-	url := getMethodUrl(api.botToken, "sendMessage")
-	messageBytes, err := json.Marshal(msg)
+	_, err := api.callMethod("sendMessage", msg)
 	if err != nil {
 		return err
-	}
-	response, err := api.client.Post(url, "application/json", bytes.NewReader(messageBytes))
-	if err != nil {
-		return err
-	}
-	if response.StatusCode >= 400 {
-		return fmt.Errorf("%v from telegram API", response.StatusCode)
 	}
 	return nil
 }
 
 func (api *Api) GetUpdates(offset int) ([]Update, error) {
-	url := getMethodUrl(api.botToken, "getUpdates")
+	type getUpdatesParams struct {
+		Offset  int    `json:"offset"`
+		Timeout uint32 `json:"timeout"`
+	}
 	msg := getUpdatesParams{
 		Offset:  offset,
 		Timeout: 1,
 	}
-	messageBytes, err := json.Marshal(msg)
+	responseBytes, err := api.callMethod("getUpdates", msg)
+	if err != nil {
+		return nil, err
+	}
+	var responseObject UpdatesResult
+	err = json.Unmarshal(responseBytes, &responseObject)
+	if err != nil {
+		return nil, err
+	}
+	if !responseObject.Ok {
+		return nil, fmt.Errorf("result wasn't ok")
+	}
+
+	return responseObject.Result, nil
+}
+
+func (api *Api) GetFile(fileID string) (File, error) {
+	type getFileArgs struct {
+		FileID string `json:"file_id"`
+	}
+	type getFileResponse struct {
+		Ok     bool `json:"ok"`
+		Result File `json:"result"`
+	}
+	responseBytes, err := api.callMethod("getFile", getFileArgs{FileID: fileID})
+	var response getFileResponse
+	if err != nil {
+		return response.Result, err
+	}
+	err = json.Unmarshal(responseBytes, &response)
+	return response.Result, err
+}
+
+func (api *Api) DownloadFile(file File) ([]byte, error) {
+	url := fmt.Sprintf("https://api.telegram.org/file/bot%v/%v", api.botToken, *file.FilePath)
+	resp, err := api.client.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("%v from api", resp.StatusCode)
+	}
+	return ioutil.ReadAll(resp.Body)
+}
+
+func getMethodUrl(botToken string, methodName string) string {
+	return fmt.Sprintf("https://api.telegram.org/bot%v/%v", botToken, methodName)
+}
+
+func (api *Api) callMethod(methodName string, payload interface{}) ([]byte, error) {
+	url := getMethodUrl(api.botToken, methodName)
+	messageBytes, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
 	}
@@ -62,26 +108,7 @@ func (api *Api) GetUpdates(offset int) ([]Update, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	var responseObject UpdatesResult
-	err = json.Unmarshal(responseBytes, &responseObject)
-	if err != nil {
-		return nil, err
-	}
-	if !responseObject.Ok {
-		return nil, fmt.Errorf("result wasn't ok")
-	}
-
-	return responseObject.Result, nil
-}
-
-func getMethodUrl(botToken string, methodName string) string {
-	return fmt.Sprintf("https://api.telegram.org/bot%v/%v", botToken, methodName)
-}
-
-type getUpdatesParams struct {
-	Offset  int    `json:"offset"`
-	Timeout uint32 `json:"timeout"`
+	return responseBytes, err
 }
 
 type UpdatesResult struct {

@@ -7,18 +7,38 @@ type Update struct {
 }
 
 type Message struct {
-	MessageId int    `json:"message_id"`
-	From      User   `json:"from"`
-	Date      int64  `json:"date"`
-	Chat      Chat   `json:"chat"`
-	Text      string `json:"text"`
+	MessageId int      `json:"message_id"`
+	From      User     `json:"from"`
+	Date      int64    `json:"date"`
+	Chat      Chat     `json:"chat"`
+	Text      string   `json:"text,omitempty"`
+	Document  Document `json:"document,omitempty"`
+}
+
+type Document struct {
+	FileName     string    `json:"file_name"`
+	MimeType     string    `json:"mime_type"`
+	Thumb        PhotoSize `json:"thumb"`
+	FileID       string    `json:"file_id"`
+	FileUniqueID string    `json:"file_unique_id"`
+	FileSize     uint32    `json:"file_size"`
+}
+
+type PhotoSize struct {
+	FileID       string `json:"file_id"`
+	FileUniqueID string `json:"file_unique_id"`
+	FileSize     uint32 `json:"file_size"`
+	Width        uint16 `json:"width"`
+	Height       uint16 `json:"height"`
 }
 
 type User struct {
-	Id        int    `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	UserName  string `json:"username"`
+	Id           int    `json:"id"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
+	UserName     string `json:"username"`
+	IsBot        bool   `json:"is_bot"`
+	LanguageCode string `json:"language_code"`
 }
 
 type Chat struct {
@@ -77,6 +97,17 @@ type KeyboardButton struct {
 
 type InlineKeyboardButton struct {
 	Text         string `json:"text"`
-	Url          string `json:"url",omitempty`
-	CallbackData string `json:"callback_data",omitempty`
+	Url          string `json:"url,omitempty"`
+	CallbackData string `json:"callback_data,omitempty"`
+}
+
+type File struct {
+	FileID       string  `json:"file_id"`
+	FileUniqueID string  `json:"file_unique_id"`
+	FileSize     *int    `json:"file_size"`
+	FilePath     *string `json:"file_path"`
+}
+
+func (msg *Message) HasDocument() bool {
+	return msg.Document.FileID != ""
 }
