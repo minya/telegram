@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type UpdateHandler func(upd *Update) interface{}
+type UpdateHandler func(upd *Update) error
 
 func StartPolling(api *Api, handle UpdateHandler, updateInterval time.Duration, offset int) error {
 	newOffset := offset
@@ -15,8 +15,14 @@ func StartPolling(api *Api, handle UpdateHandler, updateInterval time.Duration, 
 			return err
 		}
 		for _, upd := range updates {
-			msg := handle(&upd)
-			api.SendMessage(msg.(ReplyMessage))
+			err = handle(&upd)
+			if err != nil {
+				log.Printf("%#v\n", err)
+				api.SendMessage(ReplyMessage{
+					ChatId: upd.Message.From.Id,
+					Text:   "При обработке запроса прооизошла ошибка",
+				})
+			}
 			log.Printf("Update received %#v\n", upd)
 			newOffset = upd.UpdateId + 1
 		}
