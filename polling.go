@@ -7,7 +7,7 @@ import (
 
 type UpdateHandler func(upd *Update) error
 
-func StartPolling(api *Api, handle UpdateHandler, updateInterval time.Duration, offset int, notify chan int) error {
+func StartPolling(api *Api, handle UpdateHandler, updateInterval time.Duration, offset int) error {
 	newOffset := offset
 	for {
 		updates, err := api.GetUpdates(newOffset)
@@ -25,9 +25,6 @@ func StartPolling(api *Api, handle UpdateHandler, updateInterval time.Duration, 
 			}
 			log.Printf("Update received %#v\n", upd)
 			newOffset = upd.UpdateId + 1
-		}
-		if len(updates) > 0 {
-			notify <- 1
 		}
 		time.Sleep(updateInterval)
 	}

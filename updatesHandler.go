@@ -62,8 +62,19 @@ func sendMessage(msg ReplyMessage) {
 		log.Printf("%v\n", err)
 		return
 	}
+	tryLogAPIError(resp)
+}
 
-	log.Printf("%v from telegram api\n", resp.StatusCode)
+func tryLogAPIError(resp *http.Response) {
+	bodyStr := "No error data"
+	if resp.ContentLength > 0 {
+		bodyRead, err := ioutil.ReadAll(resp.Body)
+		if nil != err {
+			bodyStr = string(bodyRead)
+		} else {
+		}
+	}
+	log.Printf("%v from telegram api (%v)\n", resp.StatusCode, bodyStr)
 }
 
 func sendDocument(document ReplyDocument) {
@@ -82,7 +93,5 @@ func sendDocument(document ReplyDocument) {
 	mpWriter.Close()
 
 	resp, _ := client.Post(sendMsgURL, mpWriter.FormDataContentType(), &buf)
-	// rb, _ := ioutil.ReadAll(response.Body)
-	log.Printf("%v from telegram api\n", resp.StatusCode)
-	// log.Printf("%v\n%v\n", response, string(rb))
+	tryLogAPIError(resp)
 }
