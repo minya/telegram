@@ -10,7 +10,7 @@ type UpdateHandler func(upd *Update) error
 func StartPolling(api *Api, handle UpdateHandler, updateInterval time.Duration, offset int) error {
 	newOffset := offset
 	for {
-		log.Printf("Getting updates with offset %d\n", newOffset)
+		//log.Printf("Getting updates with offset %d\n", newOffset)
 
 		updates, err := api.GetUpdates(newOffset)
 		if err != nil {
@@ -31,8 +31,8 @@ func StartPolling(api *Api, handle UpdateHandler, updateInterval time.Duration, 
 			newOffset = upd.UpdateId + 1
 		}
 
-		log.Printf("Updates handled, new offset is %d\n", newOffset)
-		log.Printf("Sleeping for %v\n", updateInterval)
+		//log.Printf("Updates handled, new offset is %d\n", newOffset)
+		//log.Printf("Sleeping for %v\n", updateInterval)
 		time.Sleep(updateInterval)
 	}
 }
