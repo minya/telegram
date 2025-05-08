@@ -12,7 +12,7 @@ type UpdateHandler func(upd *Update) error
 func StartPolling(api *Api, handle UpdateHandler, updateInterval time.Duration, offset int) error {
 	newOffset := offset
 	for {
-		logger.Debug("Getting updates with offset %d", newOffset)
+		logger.Debug("[telegram] Getting updates with offset %d", newOffset)
 
 		updates, err := api.GetUpdates(newOffset)
 		if err != nil {
@@ -22,14 +22,14 @@ func StartPolling(api *Api, handle UpdateHandler, updateInterval time.Duration, 
 		for _, upd := range updates {
 			err = handle(&upd)
 			if err != nil {
-				logger.Error(err, "Error while handling update")
+				logger.Error(err, "[telegram] Error while handling update")
 				api.SendMessage(ReplyMessage{ // TODO: allow to disable this
 					ChatId: upd.Message.From.Id,
 					Text:   "Error while handling update",
 				})
 			}
 
-			logger.Info(fmt.Sprintf("Update received %#v\n", upd))
+			logger.Info(fmt.Sprintf("[telegram] Update received %#v\n", upd))
 			newOffset = upd.UpdateId + 1
 		}
 
