@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	github.com/minya/goutils v0.0.0-20180115114943-130dc18ce623
-	github.com/minya/logger v0.0.0-20250508140504-ea2e38096787
+	github.com/minya/logger v0.0.0-20250508192728-70dabcd8e4a3
 )
 
 require (
