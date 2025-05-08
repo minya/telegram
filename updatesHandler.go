@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 
 	"github.com/minya/goutils/web"
+	"github.com/minya/logger"
+
 )
 
 var updatesHandler func(Update) interface{}
@@ -22,7 +23,7 @@ func StartListen(botAPIToken string, port int, handler func(Update) interface{})
 	updatesHandler = handler
 	apiToken = botAPIToken
 	http.HandleFunc("/", handleHTTP)
-	log.Printf("Listen on %v\n", port)
+	logger.Info(fmt.Sprintf("Listen on %v\n", port))
 	return http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
 }
 
@@ -54,12 +55,12 @@ func sendMessage(msg ReplyMessage) {
 
 	sendMsgURL := fmt.Sprintf("https://api.telegram.org/bot%v/sendMessage", apiToken)
 
-	log.Printf("Sending msg to %v\n", msg.ChatId)
+	logger.Info(fmt.Sprintf("Sending msg to %v\n", msg.ChatId))
 	msgBin, _ := json.Marshal(msg)
 	bodyReader := bytes.NewReader(msgBin)
 	resp, err := client.Post(sendMsgURL, "application/json", bodyReader)
 	if nil != err {
-		log.Printf("%v\n", err)
+		logger.Error(err, "Send message failed")
 		return
 	}
 	tryLogAPIError(resp)
@@ -74,7 +75,7 @@ func tryLogAPIError(resp *http.Response) {
 		} else {
 		}
 	}
-	log.Printf("%v from telegram api (%v)\n", resp.StatusCode, bodyStr)
+	logger.Info(fmt.Sprintf("%v from telegram api (%v)\n", resp.StatusCode, bodyStr))
 }
 
 func sendDocument(document ReplyDocument) {
