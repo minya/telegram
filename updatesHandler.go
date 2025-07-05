@@ -5,17 +5,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 
 	"github.com/minya/goutils/web"
 	"github.com/minya/logger"
-
 )
 
-var updatesHandler func(Update) interface{}
+const (
+	telegramAPIErrorFmt = "telegram api error: %v"
+)
+
+var updatesHandler func(Update) any
 var apiToken string
 
 // StartListen runs handler
@@ -28,7 +30,7 @@ func StartListen(botAPIToken string, port int, handler func(Update) interface{})
 }
 
 func handleHTTP(w http.ResponseWriter, r *http.Request) {
-	bytes, _ := ioutil.ReadAll(r.Body)
+	bytes, _ := io.ReadAll(r.Body)
 	var upd Update
 	json.Unmarshal(bytes, &upd)
 
@@ -48,7 +50,7 @@ func handleHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func sendMessage(msg ReplyMessage) {
+func sendMessage(msg ReplyMessage) error {
 	client := http.Client{
 		Transport: web.DefaultTransport(1000),
 	}
@@ -59,26 +61,20 @@ func sendMessage(msg ReplyMessage) {
 	msgBin, _ := json.Marshal(msg)
 	bodyReader := bytes.NewReader(msgBin)
 	resp, err := client.Post(sendMsgURL, "application/json", bodyReader)
+	logger.Info(fmt.Sprintf("%v from telegram api\n", resp.StatusCode))
 	if nil != err {
 		logger.Error(err, "Send message failed")
-		return
+		return fmt.Errorf("send message failed: %v", err)
 	}
-	tryLogAPIError(resp)
+
+	if resp.StatusCode >= 400 {
+		logger.Error(fmt.Errorf(telegramAPIErrorFmt, resp.StatusCode), "Send message failed")
+		return fmt.Errorf(telegramAPIErrorFmt, resp.StatusCode)
+	}
+	return nil
 }
 
-func tryLogAPIError(resp *http.Response) {
-	bodyStr := "No error data"
-	if resp.ContentLength > 0 {
-		bodyRead, err := ioutil.ReadAll(resp.Body)
-		if nil != err {
-			bodyStr = string(bodyRead)
-		} else {
-		}
-	}
-	logger.Info(fmt.Sprintf("%v from telegram api (%v)\n", resp.StatusCode, bodyStr))
-}
-
-func sendDocument(document ReplyDocument) {
+func sendDocument(document ReplyDocument) error {
 	client := http.Client{
 		Transport: web.DefaultTransport(1000),
 	}
@@ -93,6 +89,14 @@ func sendDocument(document ReplyDocument) {
 	mpWriter.WriteField("caption", document.Caption)
 	mpWriter.Close()
 
-	resp, _ := client.Post(sendMsgURL, mpWriter.FormDataContentType(), &buf)
-	tryLogAPIError(resp)
+	resp, err := client.Post(sendMsgURL, mpWriter.FormDataContentType(), &buf)
+	if err != nil {
+		logger.Error(err, "Send document failed")
+		return fmt.Errorf("send document failed: %v", err)
+	}
+	if resp.StatusCode >= 400 {
+		logger.Error(fmt.Errorf(telegramAPIErrorFmt, resp.StatusCode), "Send document failed")
+		return fmt.Errorf(telegramAPIErrorFmt, resp.StatusCode)
+	}
+	return nil
 }

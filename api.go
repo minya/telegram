@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/minya/goutils/web"
@@ -84,7 +84,7 @@ func (api *Api) DownloadFile(file File) ([]byte, error) {
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("%v from api", resp.StatusCode)
 	}
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }
 
 func getMethodUrl(botToken string, methodName string) string {
@@ -104,7 +104,7 @@ func (api *Api) callMethod(methodName string, payload interface{}) ([]byte, erro
 	if response.StatusCode >= 400 {
 		return nil, fmt.Errorf("%v from telegram API", response.StatusCode)
 	}
-	responseBytes, err := ioutil.ReadAll(response.Body)
+	responseBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}

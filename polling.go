@@ -17,7 +17,7 @@ func StartPolling(api *Api, handle UpdateHandler, updateInterval time.Duration, 
 
 		updates, err := api.GetUpdates(newOffset)
 		if err != nil {
-			logger.Error(err, "Error while getting updates",)
+			logger.Error(err, "Error while getting updates")
 			return err
 		}
 		for _, upd := range updates {
@@ -25,7 +25,7 @@ func StartPolling(api *Api, handle UpdateHandler, updateInterval time.Duration, 
 			err = handle(&upd)
 			if err != nil {
 				logger.Error(err, "Error while handling update")
-				api.SendMessage(ReplyMessage{ // TODO: allow to disable this
+				api.SendMessage(ReplyMessage{
 					ChatId: upd.Message.From.Id,
 					Text:   "Error while handling update",
 				})
