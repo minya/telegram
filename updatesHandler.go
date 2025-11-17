@@ -85,8 +85,11 @@ func sendDocument(document ReplyDocument) error {
 	mpWriter := multipart.NewWriter(&buf)
 	fw, _ := mpWriter.CreateFormFile("document", document.InputFile.FileName)
 	fw.Write(document.InputFile.Content)
-	mpWriter.WriteField("chat_id", strconv.Itoa(document.ChatId))
+	mpWriter.WriteField("chat_id", strconv.FormatInt(document.ChatId, 10))
 	mpWriter.WriteField("caption", document.Caption)
+	if document.ParseMode != "" {
+		mpWriter.WriteField("parse_mode", document.ParseMode)
+	}
 	mpWriter.Close()
 
 	resp, err := client.Post(sendMsgURL, mpWriter.FormDataContentType(), &buf)

@@ -33,9 +33,9 @@ func (api *Api) SendMessage(msg ReplyMessage) error {
 	return nil
 }
 
-func (api *Api) GetUpdates(offset int) ([]Update, error) {
+func (api *Api) GetUpdates(offset int64) ([]Update, error) {
 	type getUpdatesParams struct {
-		Offset  int    `json:"offset"`
+		Offset  int64  `json:"offset"`
 		Timeout uint32 `json:"timeout"`
 	}
 	msg := getUpdatesParams{
