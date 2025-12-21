@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"strconv"
 
 	"github.com/minya/goutils/web"
+	"github.com/minya/logger"
 )
 
 type Api struct {
@@ -90,6 +93,36 @@ func (api *Api) DownloadFile(file File) ([]byte, error) {
 func (api *Api) AnswerCallbackQuery(params *AnswerCallbackQueryParams) error {
 	_, err := api.callMethod("answerCallbackQuery", params)
 	return err
+}
+
+func (api *Api) SendDocument(document ReplyDocument) error {
+	client := http.Client{
+		Transport: web.DefaultTransport(1000),
+	}
+
+	sendMsgURL := fmt.Sprintf("https://api.telegram.org/bot%v/sendDocument", api.botToken)
+
+	var buf bytes.Buffer
+	mpWriter := multipart.NewWriter(&buf)
+	fw, _ := mpWriter.CreateFormFile("document", document.InputFile.FileName)
+	fw.Write(document.InputFile.Content)
+	mpWriter.WriteField("chat_id", strconv.FormatInt(document.ChatId, 10))
+	mpWriter.WriteField("caption", document.Caption)
+	if document.ParseMode != "" {
+		mpWriter.WriteField("parse_mode", document.ParseMode)
+	}
+	mpWriter.Close()
+
+	resp, err := client.Post(sendMsgURL, mpWriter.FormDataContentType(), &buf)
+	if err != nil {
+		logger.Error(err, "Send document failed")
+		return fmt.Errorf("send document failed: %v", err)
+	}
+	if resp.StatusCode >= 400 {
+		logger.Error(fmt.Errorf(telegramAPIErrorFmt, resp.StatusCode), "Send document failed")
+		return fmt.Errorf(telegramAPIErrorFmt, resp.StatusCode)
+	}
+	return nil
 }
 
 func getMethodUrl(botToken string, methodName string) string {
