@@ -13,6 +13,10 @@ import (
 	"github.com/minya/logger"
 )
 
+const (
+	telegramAPIErrorFmt = "telegram api error: %v"
+)
+
 type Api struct {
 	botToken string
 	client   http.Client
@@ -123,6 +127,11 @@ func (api *Api) SendDocument(document ReplyDocument) error {
 		return fmt.Errorf(telegramAPIErrorFmt, resp.StatusCode)
 	}
 	return nil
+}
+
+func (api *Api) SetWebhook(params *SetWebhookParams) error {
+	_, err := api.callMethod("setWebhook", params)
+	return err
 }
 
 func getMethodUrl(botToken string, methodName string) string {

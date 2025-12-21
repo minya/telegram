@@ -32,11 +32,11 @@ type Document struct {
 }
 
 type PhotoSize struct {
-	FileID       string  `json:"file_id"`
-	FileUniqueID string  `json:"file_unique_id"`
-	FileSize     *int64  `json:"file_size,omitempty"`
-	Width        uint16  `json:"width"`
-	Height       uint16  `json:"height"`
+	FileID       string `json:"file_id"`
+	FileUniqueID string `json:"file_unique_id"`
+	FileSize     *int64 `json:"file_size,omitempty"`
+	Width        uint16 `json:"width"`
+	Height       uint16 `json:"height"`
 }
 
 type MessageEntity struct {
@@ -74,9 +74,9 @@ type ReplyMessage struct {
 }
 
 type ReplyDocument struct {
-	ChatId      int64      `json:"chat_id"`
-	Caption     string     `json:"caption,omitempty"`
-	ParseMode   string     `json:"parse_mode,omitempty"`
+	ChatId      int64  `json:"chat_id"`
+	Caption     string `json:"caption,omitempty"`
+	ParseMode   string `json:"parse_mode,omitempty"`
 	InputFile   InputFile
 	ReplyMarkup interface{} `json:"reply_markup,omitempty"`
 }
@@ -99,6 +99,16 @@ type ReplyKeyboardMarkup struct {
 	ResizeKeyboard  bool               `json:"resize_keyboard"`
 	OneTimeKeyboard bool               `json:"one_time_keyboard"`
 	Selective       bool               `json:"selective"`
+}
+
+type SetWebhookParams struct {
+	Url                string     `json:"url"`
+	Certificate        *InputFile `json:"certificate,omitempty"`
+	IpAddress          string     `json:"ip_address,omitempty"`
+	MaxConnections     int        `json:"max_connections,omitempty"`
+	AllowedUpdates     []string   `json:"allowed_updates,omitempty"`
+	DropPendingUpdates bool       `json:"drop_pending_updates,omitempty"`
+	SecretToken        string     `json:"secret_token,omitempty"`
 }
 
 type InlineKeyboardMarkup struct {
@@ -125,11 +135,11 @@ type File struct {
 }
 
 type AnswerCallbackQueryParams struct {
-	CallbackQueryID string `json:"callback_query_id"`
-	Text            string `json:"text,omitempty"`
-	ShowAlert       bool   `json:"show_alert,omitempty"`
+	CallbackQueryID string  `json:"callback_query_id"`
+	Text            string  `json:"text,omitempty"`
+	ShowAlert       bool    `json:"show_alert,omitempty"`
 	Url             *string `json:"url,omitempty"`
-	CacheTime       int    `json:"cache_time,omitempty"`
+	CacheTime       int     `json:"cache_time,omitempty"`
 }
 
 func (msg *Message) HasDocument() bool {
@@ -138,4 +148,3 @@ func (msg *Message) HasDocument() bool {
 	}
 	return msg.Document.FileID != ""
 }
-
