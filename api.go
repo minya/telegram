@@ -87,6 +87,11 @@ func (api *Api) DownloadFile(file File) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
+func (api *Api) AnswerCallbackQuery(params *AnswerCallbackQueryParams) error {
+	_, err := api.callMethod("answerCallbackQuery", params)
+	return err
+}
+
 func getMethodUrl(botToken string, methodName string) string {
 	return fmt.Sprintf("https://api.telegram.org/bot%v/%v", botToken, methodName)
 }

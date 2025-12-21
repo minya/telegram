@@ -124,9 +124,18 @@ type File struct {
 	FilePath     *string `json:"file_path"`
 }
 
+type AnswerCallbackQueryParams struct {
+	CallbackQueryID string `json:"callback_query_id"`
+	Text            string `json:"text,omitempty"`
+	ShowAlert       bool   `json:"show_alert,omitempty"`
+	Url             *string `json:"url,omitempty"`
+	CacheTime       int    `json:"cache_time,omitempty"`
+}
+
 func (msg *Message) HasDocument() bool {
 	if msg == nil || msg.Document == nil {
 		return false
 	}
 	return msg.Document.FileID != ""
 }
+
