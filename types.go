@@ -142,6 +142,14 @@ type AnswerCallbackQueryParams struct {
 	CacheTime       int     `json:"cache_time,omitempty"`
 }
 
+type EditMessageTextParams struct {
+	ChatID      int64       `json:"chat_id,omitempty"`
+	MessageID   int64       `json:"message_id,omitempty"`
+	Text        string      `json:"text"`
+	ParseMode   string      `json:"parse_mode,omitempty"`
+	ReplyMarkup interface{} `json:"reply_markup,omitempty"`
+}
+
 func (msg *Message) HasDocument() bool {
 	if msg == nil || msg.Document == nil {
 		return false

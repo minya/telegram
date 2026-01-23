@@ -99,6 +99,11 @@ func (api *Api) AnswerCallbackQuery(params *AnswerCallbackQueryParams) error {
 	return err
 }
 
+func (api *Api) EditMessageText(params *EditMessageTextParams) error {
+	_, err := api.callMethod("editMessageText", params)
+	return err
+}
+
 func (api *Api) SendDocument(document ReplyDocument) error {
 	client := http.Client{
 		Transport: web.DefaultTransport(1000),
