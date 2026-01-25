@@ -155,6 +155,17 @@ type EditMessageTextParams struct {
 	ReplyMarkup interface{} `json:"reply_markup,omitempty"`
 }
 
+type SetChatMenuButtonParams struct {
+	ChatID     int64       `json:"chat_id,omitempty"`
+	MenuButton *MenuButton `json:"menu_button,omitempty"`
+}
+
+type MenuButton struct {
+	Type   string      `json:"type"`
+	Text   string      `json:"text,omitempty"`
+	WebApp *WebAppInfo `json:"web_app,omitempty"`
+}
+
 func (msg *Message) HasDocument() bool {
 	if msg == nil || msg.Document == nil {
 		return false

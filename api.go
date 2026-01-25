@@ -139,6 +139,11 @@ func (api *Api) SetWebhook(params *SetWebhookParams) error {
 	return err
 }
 
+func (api *Api) SetChatMenuButton(params *SetChatMenuButtonParams) error {
+	_, err := api.callMethod("setChatMenuButton", params)
+	return err
+}
+
 func getMethodUrl(botToken string, methodName string) string {
 	return fmt.Sprintf("https://api.telegram.org/bot%v/%v", botToken, methodName)
 }
