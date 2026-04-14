@@ -1,5 +1,7 @@
 package telegram
 
+import "encoding/json"
+
 type Update struct {
 	UpdateId          int64          `json:"update_id"`
 	Message           *Message       `json:"message,omitempty"`
@@ -7,6 +9,13 @@ type Update struct {
 	ChannelPost       *Message       `json:"channel_post,omitempty"`
 	EditedChannelPost *Message       `json:"edited_channel_post,omitempty"`
 	CallbackQuery     *CallbackQuery `json:"callback_query,omitempty"`
+}
+
+type ApiResponse struct {
+	Ok          bool            `json:"ok"`
+	Description string          `json:"description,omitempty"`
+	ErrorCode   int             `json:"error_code,omitempty"`
+	Result      json.RawMessage `json:"result,omitempty"`
 }
 
 type Message struct {
@@ -67,10 +76,10 @@ type Chat struct {
 }
 
 type ReplyMessage struct {
-	ChatId      int64       `json:"chat_id"`
-	Text        string      `json:"text"`
-	ParseMode   string      `json:"parse_mode,omitempty"`
-	ReplyMarkup interface{} `json:"reply_markup,omitempty"`
+	ChatId      int64  `json:"chat_id"`
+	Text        string `json:"text"`
+	ParseMode   string `json:"parse_mode,omitempty"`
+	ReplyMarkup any    `json:"reply_markup,omitempty"`
 }
 
 type ReplyDocument struct {
@@ -78,7 +87,7 @@ type ReplyDocument struct {
 	Caption     string `json:"caption,omitempty"`
 	ParseMode   string `json:"parse_mode,omitempty"`
 	InputFile   InputFile
-	ReplyMarkup interface{} `json:"reply_markup,omitempty"`
+	ReplyMarkup any `json:"reply_markup,omitempty"`
 }
 
 type InputFile struct {
@@ -122,10 +131,10 @@ type KeyboardButton struct {
 }
 
 type InlineKeyboardButton struct {
-	Text         string `json:"text"`
-	Url          string `json:"url,omitempty"`
-	CallbackData string `json:"callback_data,omitempty"`
-	WebApp      *WebAppInfo `json:"web_app,omitempty"`
+	Text         string      `json:"text"`
+	Url          string      `json:"url,omitempty"`
+	CallbackData string      `json:"callback_data,omitempty"`
+	WebApp       *WebAppInfo `json:"web_app,omitempty"`
 }
 
 type WebAppInfo struct {
@@ -148,11 +157,11 @@ type AnswerCallbackQueryParams struct {
 }
 
 type EditMessageTextParams struct {
-	ChatID      int64       `json:"chat_id,omitempty"`
-	MessageID   int64       `json:"message_id,omitempty"`
-	Text        string      `json:"text"`
-	ParseMode   string      `json:"parse_mode,omitempty"`
-	ReplyMarkup interface{} `json:"reply_markup,omitempty"`
+	ChatID      int64  `json:"chat_id,omitempty"`
+	MessageID   int64  `json:"message_id,omitempty"`
+	Text        string `json:"text"`
+	ParseMode   string `json:"parse_mode,omitempty"`
+	ReplyMarkup any    `json:"reply_markup,omitempty"`
 }
 
 type SetChatMenuButtonParams struct {

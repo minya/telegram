@@ -33,9 +33,12 @@ func NewApi(botToken string) Api {
 }
 
 func (api *Api) SendMessage(msg ReplyMessage) error {
-	_, err := api.callMethod("sendMessage", msg)
+	apiResponse, err := api.callMethod("sendMessage", msg)
 	if err != nil {
 		return err
+	}
+	if !apiResponse.Ok {
+		return formatApiResponseError(apiResponse)
 	}
 	return nil
 }
@@ -49,37 +52,39 @@ func (api *Api) GetUpdates(offset int64) ([]Update, error) {
 		Offset:  offset,
 		Timeout: 1,
 	}
-	responseBytes, err := api.callMethod("getUpdates", msg)
+	apiResponse, err := api.callMethod("getUpdates", msg)
 	if err != nil {
 		return nil, err
 	}
-	var responseObject UpdatesResult
-	err = json.Unmarshal(responseBytes, &responseObject)
+	if !apiResponse.Ok {
+		return nil, formatApiResponseError(apiResponse)
+	}
+	var updates []Update
+	err = json.Unmarshal(apiResponse.Result, &updates)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Can't unmarshal response payload from telegram API: %v", err)
 	}
-	if !responseObject.Ok {
-		return nil, fmt.Errorf("result wasn't ok")
-	}
-
-	return responseObject.Result, nil
+	return updates, nil
 }
 
 func (api *Api) GetFile(fileID string) (File, error) {
 	type getFileArgs struct {
 		FileID string `json:"file_id"`
 	}
-	type getFileResponse struct {
-		Ok     bool `json:"ok"`
-		Result File `json:"result"`
-	}
-	responseBytes, err := api.callMethod("getFile", getFileArgs{FileID: fileID})
-	var response getFileResponse
+	var file = File{}
+	apiResponse, err := api.callMethod("getFile", getFileArgs{FileID: fileID})
 	if err != nil {
-		return response.Result, err
+		return file, err
 	}
-	err = json.Unmarshal(responseBytes, &response)
-	return response.Result, err
+	if !apiResponse.Ok {
+		return file, formatApiResponseError(apiResponse)
+	}
+	err = json.Unmarshal(apiResponse.Result, &file)
+	if err != nil {
+		return file, fmt.Errorf("Can't unmarshal response payload from telegram API: %v", err)
+	}
+
+	return file, err
 }
 
 func (api *Api) DownloadFile(file File) ([]byte, error) {
@@ -148,27 +153,28 @@ func getMethodUrl(botToken string, methodName string) string {
 	return fmt.Sprintf("https://api.telegram.org/bot%v/%v", botToken, methodName)
 }
 
-func (api *Api) callMethod(methodName string, payload interface{}) ([]byte, error) {
+func (api *Api) callMethod(methodName string, payload any) (ApiResponse, error) {
 	url := getMethodUrl(api.botToken, methodName)
 	messageBytes, err := json.Marshal(payload)
+	var apiResponse = ApiResponse{}
 	if err != nil {
-		return nil, err
+		return apiResponse, err
 	}
 	response, err := api.client.Post(url, "application/json", bytes.NewReader(messageBytes))
 	if err != nil {
-		return nil, err
-	}
-	if response.StatusCode >= 400 {
-		return nil, fmt.Errorf("%v from telegram API", response.StatusCode)
+		return apiResponse, err
 	}
 	responseBytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return apiResponse, fmt.Errorf("Can't read response	from telegram API: %v", err)
 	}
-	return responseBytes, err
+	err = json.Unmarshal(responseBytes, &apiResponse)
+	if err != nil {
+		return apiResponse, fmt.Errorf("Can't unmarshal response from telegram API: %v", err)
+	}
+	return apiResponse, err
 }
 
-type UpdatesResult struct {
-	Ok     bool     `json:"ok"`
-	Result []Update `json:"result,omitempty"`
+func formatApiResponseError(apiResponse ApiResponse) error {
+	return fmt.Errorf("telegram API error: %v, description: %v", apiResponse.ErrorCode, apiResponse.Description)
 }
