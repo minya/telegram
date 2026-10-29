@@ -296,7 +296,7 @@ type WebhookInfo struct {
 	LastErrorMessage             string   `json:"last_error_message,omitempty"`
 	LastSynchronizationErrorDate int64    `json:"last_synchronization_error_date,omitempty"`
 	MaxConnections               int      `json:"max_connections,omitempty"`
-	AllowedUpdates               []string `json:"allowed_updates,omitempty"`
+	AllowedUpdates               []string `json:"allowed_updates,omitzero"`
 }
 
 // Method parameters.
@@ -305,7 +305,7 @@ type GetUpdatesParams struct {
 	Offset         int64    `json:"offset,omitempty"`
 	Limit          int      `json:"limit,omitempty"`
 	Timeout        int      `json:"timeout,omitempty"` // long-poll timeout in seconds
-	AllowedUpdates []string `json:"allowed_updates,omitempty"`
+	AllowedUpdates []string `json:"allowed_updates,omitzero"`
 }
 
 type SendMessageParams struct {
@@ -358,7 +358,7 @@ type CopyMessageParams struct {
 	MessageThreadID     int64            `json:"message_thread_id,omitempty"`
 	FromChatID          int64            `json:"from_chat_id"`
 	MessageID           int64            `json:"message_id"`
-	Caption             string           `json:"caption,omitempty"`
+	Caption             *string          `json:"caption,omitempty"` // nil keeps the original caption; "" removes it
 	ParseMode           string           `json:"parse_mode,omitempty"`
 	DisableNotification bool             `json:"disable_notification,omitempty"`
 	ProtectContent      bool             `json:"protect_content,omitempty"`
@@ -409,7 +409,7 @@ type SetWebhookParams struct {
 	Certificate        *InputFile `json:"-"` // public key of a self-signed certificate
 	IPAddress          string     `json:"ip_address,omitempty"`
 	MaxConnections     int        `json:"max_connections,omitempty"`
-	AllowedUpdates     []string   `json:"allowed_updates,omitempty"`
+	AllowedUpdates     []string   `json:"allowed_updates,omitzero"`
 	DropPendingUpdates bool       `json:"drop_pending_updates,omitempty"`
 	SecretToken        string     `json:"secret_token,omitempty"`
 }

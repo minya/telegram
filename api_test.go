@@ -378,3 +378,26 @@ func TestRetryDelay(t *testing.T) {
 		t.Errorf("retry_after delay %v", d)
 	}
 }
+
+func TestOptionalFieldsSerialization(t *testing.T) {
+	cases := []struct {
+		name   string
+		params any
+		want   string
+	}{
+		{"filter omitted", GetUpdatesParams{}, `{}`},
+		{"filter reset", GetUpdatesParams{AllowedUpdates: []string{}}, `{"allowed_updates":[]}`},
+		{"webhook filter reset", SetWebhookParams{URL: "u", AllowedUpdates: []string{}}, `{"url":"u","allowed_updates":[]}`},
+		{"caption kept", CopyMessageParams{ChatID: 1, FromChatID: 2, MessageID: 3}, `{"chat_id":1,"from_chat_id":2,"message_id":3}`},
+		{"caption removed", CopyMessageParams{ChatID: 1, FromChatID: 2, MessageID: 3, Caption: new(string)}, `{"chat_id":1,"from_chat_id":2,"message_id":3,"caption":""}`},
+	}
+	for _, c := range cases {
+		got, err := json.Marshal(c.params)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != c.want {
+			t.Errorf("%s: got %s, want %s", c.name, got, c.want)
+		}
+	}
+}
