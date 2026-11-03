@@ -119,14 +119,21 @@ api.SetWebhook(ctx, telegram.SetWebhookParams{
 	SecretToken: "some-secret",
 })
 
-http.Handle("/telegram/webhook", telegram.WebhookHandler("some-secret", handler, onError))
+wh := telegram.WebhookHandler("some-secret", handler, onError)
+http.Handle("/telegram/webhook", wh)
+
+// On shutdown, after http.Server.Shutdown:
+_ = wh.Wait(shutdownCtx)
 ```
 
 `WebhookHandler` accepts only POST requests that carry the right
-`X-Telegram-Bot-Api-Secret-Token` header. It decodes the update and calls the
-handler. It answers 200 even when the handler fails, so Telegram does not keep
-redelivering the update. To upload a self-signed certificate, set
-`SetWebhookParams.Certificate`.
+`X-Telegram-Bot-Api-Secret-Token` header. It decodes the update, answers 200
+at once and runs the handler in its own goroutine, so a slow handler never
+holds Telegram's connection open, triggers a redelivery or delays later
+updates. The handler's context is not cancelled when Telegram disconnects.
+Handler errors and panics go to `onError`. Handlers run concurrently and may
+still be running after `Shutdown` returns; `Wait` waits for them. To upload a
+self-signed certificate, set `SetWebhookParams.Certificate`.
 
 ## Examples
 
