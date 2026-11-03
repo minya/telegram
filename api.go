@@ -7,11 +7,10 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/minya/goutils/web"
 )
 
 // DefaultBaseURL is the public Bot API endpoint.
@@ -39,13 +38,22 @@ func WithHTTPClient(client *http.Client) Option {
 	return func(api *API) { api.client = client }
 }
 
+// defaultTransport is net/http's default transport (proxy from the
+// environment, TLS handshake and idle timeouts, HTTP/2) with a 10 s dial
+// timeout, enough for api.telegram.org over a slow or filtered link.
+func defaultTransport() *http.Transport {
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.DialContext = (&net.Dialer{Timeout: 10 * time.Second, KeepAlive: 30 * time.Second}).DialContext
+	return t
+}
+
 // NewAPI creates a client for the bot with the given token.
 func NewAPI(token string, opts ...Option) *API {
 	api := &API{
 		token:   token,
 		baseURL: DefaultBaseURL,
 		client: &http.Client{
-			Transport: web.DefaultTransport(1000),
+			Transport: defaultTransport(),
 			Timeout:   60 * time.Second,
 		},
 	}

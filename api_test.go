@@ -401,3 +401,20 @@ func TestOptionalFieldsSerialization(t *testing.T) {
 		}
 	}
 }
+
+// F66: the default client uses net/http's transport, which honours proxy
+// environment variables and sets TLS handshake and idle timeouts, instead
+// of the 2018 goutils transport the library's own tests used to exercise.
+func TestDefaultTransport(t *testing.T) {
+	api := NewAPI("tok")
+	tr, ok := api.client.Transport.(*http.Transport)
+	if !ok {
+		t.Fatalf("transport is %T", api.client.Transport)
+	}
+	if tr.Proxy == nil {
+		t.Error("transport ignores HTTPS_PROXY (Proxy is nil)")
+	}
+	if tr.TLSHandshakeTimeout == 0 || tr.IdleConnTimeout == 0 || tr.DialContext == nil {
+		t.Errorf("transport timeouts: handshake %v, idle %v, dial set %v", tr.TLSHandshakeTimeout, tr.IdleConnTimeout, tr.DialContext != nil)
+	}
+}
