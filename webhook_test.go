@@ -3,9 +3,13 @@ package telegram
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -106,5 +110,99 @@ func TestWebhookReportsPanics(t *testing.T) {
 	h.Wait(context.Background())
 	if err := <-reported; err == nil || !strings.Contains(err.Error(), "boom") {
 		t.Fatalf("onError got %v, want the panic", err)
+	}
+}
+
+func post(h *Webhook, body string) {
+	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/hook", strings.NewReader(body)))
+}
+
+// F116: one chat's updates run one after another in update_id order, even
+// when they arrive out of order, while another chat's run alongside; Wait
+// covers queued updates.
+func TestWebhookOrdersUpdatesPerChat(t *testing.T) {
+	var mu sync.Mutex
+	var order []int64
+	running := map[int64]int{}
+	overlap := false
+	firstIn := make(chan struct{})
+	release := make(chan struct{})
+	otherDone := make(chan struct{})
+	h := WebhookHandler("", func(ctx context.Context, upd *Update) error {
+		chat, _ := UpdateChatID(upd)
+		mu.Lock()
+		running[chat]++
+		if running[chat] > 1 {
+			overlap = true
+		}
+		order = append(order, upd.UpdateID)
+		mu.Unlock()
+		switch upd.UpdateID {
+		case 1:
+			close(firstIn)
+			<-release // holds chat 5 until chat 9 has been handled
+		case 100:
+			close(otherDone)
+		}
+		mu.Lock()
+		running[chat]--
+		mu.Unlock()
+		return nil
+	}, nil)
+
+	post(h, `{"update_id":1,"message":{"message_id":1,"chat":{"id":5}}}`)
+	<-firstIn
+	for _, id := range []string{"4", "2", "3"} { // arrive out of order
+		post(h, `{"update_id":`+id+`,"message":{"message_id":1,"chat":{"id":5}}}`)
+	}
+	post(h, `{"update_id":100,"message":{"message_id":1,"chat":{"id":9}}}`)
+	select {
+	case <-otherDone:
+	case <-time.After(3 * time.Second):
+		t.Fatal("another chat's update waited for chat 5")
+	}
+	short, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	if h.Wait(short) == nil {
+		t.Fatal("Wait returned with updates still queued")
+	}
+	close(release)
+	if err := h.Wait(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	var chat5 []int64
+	for _, id := range order {
+		if id < 100 {
+			chat5 = append(chat5, id)
+		}
+	}
+	if overlap || !slices.Equal(chat5, []int64{1, 2, 3, 4}) {
+		t.Fatalf("chat 5 handled %v (overlap %v), want 1 2 3 4 one at a time", chat5, overlap)
+	}
+}
+
+// F116: no more than the cap run at once.
+func TestWebhookCapsConcurrency(t *testing.T) {
+	var active, peak atomic.Int32
+	h := WebhookHandler("", func(context.Context, *Update) error {
+		n := active.Add(1)
+		for {
+			p := peak.Load()
+			if n <= p || peak.CompareAndSwap(p, n) {
+				break
+			}
+		}
+		time.Sleep(20 * time.Millisecond)
+		active.Add(-1)
+		return nil
+	}, nil, WithMaxConcurrent(3))
+	for i := range 30 {
+		post(h, fmt.Sprintf(`{"update_id":%d,"message":{"message_id":1,"chat":{"id":%d}}}`, i+1, i+1))
+	}
+	if err := h.Wait(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if peak.Load() > 3 || peak.Load() < 2 {
+		t.Fatalf("peak concurrent handlers = %d, want at most 3 (and some overlap)", peak.Load())
 	}
 }

@@ -131,8 +131,11 @@ _ = wh.Wait(shutdownCtx)
 at once and runs the handler in its own goroutine, so a slow handler never
 holds Telegram's connection open, triggers a redelivery or delays later
 updates. The handler's context is not cancelled when Telegram disconnects.
-Handler errors and panics go to `onError`. Handlers run concurrently and may
-still be running after `Shutdown` returns; `Wait` waits for them. To upload a
+Handler errors and panics go to `onError`. One chat's updates are handled one
+after another, in `update_id` order, while different chats run concurrently,
+at most 40 at once; change that with `WithOrderKey` and `WithMaxConcurrent`.
+Handlers may still be running or queued after `Shutdown` returns; `Wait`
+waits for them. To upload a
 self-signed certificate, set `SetWebhookParams.Certificate`.
 
 ## Examples
