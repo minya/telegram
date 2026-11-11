@@ -36,6 +36,8 @@ type Update struct {
 	CallbackQuery     *CallbackQuery     `json:"callback_query,omitempty"`
 	MyChatMember      *ChatMemberUpdated `json:"my_chat_member,omitempty"`
 	ChatMember        *ChatMemberUpdated `json:"chat_member,omitempty"`
+	WidgetQuery       *WidgetQuery       `json:"widget_query,omitempty"`
+	SharedWidgetQuery *SharedWidgetQuery `json:"shared_widget_query,omitempty"`
 }
 
 type Message struct {
@@ -58,6 +60,7 @@ type Message struct {
 	Sticker         *Sticker        `json:"sticker,omitempty"`
 	Contact         *Contact        `json:"contact,omitempty"`
 	Location        *Location       `json:"location,omitempty"`
+	Widget          *Widget         `json:"widget,omitempty"`
 }
 
 func (msg *Message) HasDocument() bool {

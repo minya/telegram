@@ -3,7 +3,8 @@
 A small Go client for the [Telegram Bot API](https://core.telegram.org/bots/api).
 It covers the methods needed for typical bots: receiving updates by long
 polling or webhook, sending messages, documents and photos, editing and
-deleting messages, downloading files, keyboards, callback queries, commands and
+deleting messages, downloading files, keyboards, callback queries, HTML
+widgets (sendWidget, widget queries, widget state), commands and
 Web App menu buttons.
 
 ```

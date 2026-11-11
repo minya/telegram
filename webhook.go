@@ -68,7 +68,7 @@ func WithOrderKey(key func(*Update) (int64, bool)) WebhookOption {
 // UpdateChatID returns the chat an update belongs to: the chat of its
 // message, edited message, channel post or the callback query's message,
 // else the callback or inline query's sender, else the chat of a member
-// update.
+// update, else the chat of a widget query, else a widget query's sender.
 func UpdateChatID(upd *Update) (int64, bool) {
 	for _, m := range []*Message{upd.Message, upd.EditedMessage, upd.ChannelPost, upd.EditedChannelPost} {
 		if m != nil {
@@ -86,6 +86,12 @@ func UpdateChatID(upd *Update) (int64, bool) {
 		return upd.MyChatMember.Chat.ID, true
 	case upd.ChatMember != nil:
 		return upd.ChatMember.Chat.ID, true
+	case upd.WidgetQuery != nil && upd.WidgetQuery.Chat != nil:
+		return upd.WidgetQuery.Chat.ID, true
+	case upd.WidgetQuery != nil && upd.WidgetQuery.From != nil:
+		return upd.WidgetQuery.From.ID, true
+	case upd.SharedWidgetQuery != nil && upd.SharedWidgetQuery.From != nil:
+		return upd.SharedWidgetQuery.From.ID, true
 	}
 	return 0, false
 }
